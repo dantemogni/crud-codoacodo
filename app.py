@@ -17,14 +17,14 @@ mysql.init_app(app) #Creamos la conexión con los datos
 
 @app.route('/') #Hacemos el ruteo para que el usuario entre en la raiz
 def index():
-    # sql = "SELECT * FROM `sistema`.`empleados`;"
-    # conn = mysql.connect() #Se conecta a la conexión mysql.init_app(app)
-    # cursor = conn.cursor() #Almacenaremos lo que ejecutamos
-    # cursor.execute(sql) #Ejecutamos la sentencia SQL
-    # empleados=cursor.fetchall() #Traemos toda la información
-    # print(empleados) #Imprimimos los datos en la terminal
-    # conn.commit() #Cerramos la conexión  
-    return render_template('empleados/index.html') #Identifica la carpeta y el archivo htm
+    sql = "SELECT * FROM `sistema`.`empleados`;"
+    conn = mysql.connect() #Se conecta a la conexión mysql.init_app(app)
+    cursor = conn.cursor() #Almacenaremos lo que ejecutamos
+    cursor.execute(sql) #Ejecutamos la sentencia SQL
+    empleados=cursor.fetchall() #Traemos toda la información
+    print(empleados) #Imprimimos los datos en la terminal
+    conn.commit() #Cerramos la conexión  
+    return render_template('empleados/index.html', empleados=empleados) #Identifica la carpeta y el archivo htm
 
 @app.route('/create')
 def create():
