@@ -1,11 +1,13 @@
 from flask import Flask  # Importamos el framework Flask
 # Importamos el render para mostrar todos los templates
-from flask import render_template, request, redirect
+from flask import render_template, request, redirect, url_for,flash
+from flask import send_from_directory #Acceso a las carpetas
 from flaskext.mysql import MySQL  # Importamos para conectarnos a la BD
 from datetime import datetime  # Nos permitirá darle el nombre a la foto
 import os  # Nos pemite acceder a los archivos
 
 app = Flask(__name__)  # Creamos la aplicación
+app.secret_key="ClaveSecreta"
 
 mysql = MySQL()
 
@@ -22,6 +24,9 @@ CARPETA = os.path.join('uploads')  # Referencia a la carpeta
 # Indicamos que vamos a guardar esta ruta de la carpeta
 app.config['CARPETA'] = CARPETA
 
+@app.route('/uploads/<nombreFoto>')
+def uploads(nombreFoto):
+    return send_from_directory(app.config['CARPETA'], nombreFoto)
 
 @app.route('/')  # Hacemos el ruteo para que el usuario entre en la raiz
 def index():
@@ -110,6 +115,11 @@ def storage():
     _correo = request.form['txtCorreo']
     _foto = request.files['txtFoto']
 
+    #Valido
+    if _nombre == '' or _correo == '' or _foto =='':
+        flash('Recuerda llenar los datos de los campos') #Envía el mensaje
+        return redirect(url_for('create')) #Vuelve a la página de carga de datos
+
     now = datetime.now()  # Para añadir al nombre del archivo subido
     tiempo = now.strftime("%Y%H%M%S")  # Años horas minutos y segundos
 
@@ -127,8 +137,7 @@ def storage():
     conn.commit()  # Cerramos la conexión
 
     # Identifica la carpeta y el archivo html
-    return render_template('empleados/index.html')
-
+    return redirect('/') #Regresamos de donde vinimos
 
 if __name__ == '__main__':  # Estas lìneas de código las requiere python para que se pueda empezar a trabajar con la aplicación
     # Corremos la aplicación en modo debug (con el código activamos el debugger)
