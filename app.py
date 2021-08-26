@@ -1,5 +1,5 @@
 from flask import Flask #Importamos el framework Flask
-from flask import render_template,request #Importamos el render para mostrar todos los templates
+from flask import render_template,request,redirect #Importamos el render para mostrar todos los templates
 from flaskext.mysql import MySQL #Importamos para conectarnos a la BD
 from datetime import datetime #Nos permitirá darle el nombre a la foto
 
@@ -26,6 +26,14 @@ def index():
     conn.commit() #Cerramos la conexión  
     return render_template('empleados/index.html', empleados=empleados) #Identifica la carpeta y el archivo htm
 
+@app.route('/destroy/<int:id>') #Recibe como parámetro el id del registro
+def destroy(id):
+    conn = mysql.connect() #Se conecta a la conexión mysql.init_app(app)
+    cursor = conn.cursor() #Almacenaremos lo que ejecutamos
+    cursor.execute("DELETE FROM `sistema`.`empleados` WHERE id=%s", (id)) #En vez de pasarle el string la escribimos
+    conn.commit() #Cerramos la conexión
+    return redirect('/') #Regresamos de donde vinimos
+    
 @app.route('/create')
 def create():
     return render_template('empleados/create.html')
