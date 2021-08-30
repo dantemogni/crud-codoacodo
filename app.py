@@ -1,144 +1,128 @@
 from flask import Flask  # Importamos el framework Flask
 # Importamos el render para mostrar todos los templates
 from flask import render_template, request, redirect, url_for,flash
-from flask import send_from_directory #Acceso a las carpetas
-from flaskext.mysql import MySQL  # Importamos para conectarnos a la BD
+from flask import send_from_directory #Acceso a las UPLOAD_FOLDERs
+from flask_sqlalchemy import SQLAlchemy  # Importamos para conectarnos a la BD
 from datetime import datetime  # Nos permitirá darle el nombre a la foto
 import os  # Nos pemite acceder a los archivos
+from werkzeug.utils import secure_filename
+from models import db, Employee
 
-app = Flask(__name__)  # Creamos la aplicación
-app.secret_key="ClaveSecreta"
+app = Flask(__name__) 
 
-mysql = MySQL()
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:root@localhost/system'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = os.urandom(16)
 
-# Creamos la referencia al host, para que se conecte a la base de datos MYSQL utilizamos el host localhost
-app.config['MYSQL_DATABASE_HOST'] = 'localhost'
-# Indicamos el usuario, por defecto es user
-app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = ''  # Sin contraseña, se puede omitir
-app.config['MYSQL_DATABASE_BD'] = 'sistema'  # Nombre de nuestra BD
+# Configs for uploading photos
+UPLOAD_FOLDER = os.path.join('data/uploads') 
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-mysql.init_app(app)  # Creamos la conexión con los datos
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-CARPETA = os.path.join('data/uploads')  # Referencia a la carpeta
-# Indicamos que vamos a guardar esta ruta de la carpeta
-app.config['CARPETA'] = CARPETA
-
-@app.route('/data/uploads/<nombreFoto>')
-def uploads(nombreFoto):
-    return send_from_directory(app.config['CARPETA'], nombreFoto)
+@app.route('/data/uploads/<filename>')
+def uploads(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/data/no-photo.svg')
 def noPhoto():
     return send_from_directory( os.path.join('data'), 'no-photo.svg')
 
-@app.route('/')  # Hacemos el ruteo para que el usuario entre en la raiz
+@app.route('/')
 def index():
-    sql = "SELECT * FROM `sistema`.`empleados`;"
-    conn = mysql.connect()  # Se conecta a la conexión mysql.init_app(app)
-    cursor = conn.cursor()  # Almacenaremos lo que ejecutamos
-    cursor.execute(sql)  # Ejecutamos la sentencia SQL
-    empleados = cursor.fetchall()  # Traemos toda la información
-    conn.commit()  # Cerramos la conexión
-    cantEmpleados = len(empleados)
-    # Identifica la carpeta y el archivo htm
-    return render_template('empleados/index.html', empleados=empleados, cantEmpleados=cantEmpleados)
+    employees = Employee.query # Gets all the values from Employee table
+    employeesCount = Employee.query.count() # Counts the values
+
+    return render_template('empleados/index.html', employees=employees, employeesCount=employeesCount)
 
 
-@app.route('/destroy/<int:id>')  # Recibe como parámetro el id del registro
-def destroy(id):
-    conn = mysql.connect()  # Se conecta a la conexión mysql.init_app(app)
-    cursor = conn.cursor()  # Almacenaremos lo que ejecutamos
-
-    cursor.execute("SELECT foto FROM `sistema`.`empleados` WHERE id=%s",id) #Buscamos la foto
-    fila = cursor.fetchall() #Traemos toda la información
+@app.route('/destroy/<int:deleteID>')
+def destroy(deleteID):
+    #Gets the employee that matches the ID
+    toDelete = Employee.query.filter_by(id = deleteID).first_or_404()
 
     try:
-        os.remove(os.path.join(app.config['CARPETA'], fila[0][0])) #Ese valor seleccionado se encuentra en la posición 0 y la fila
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], toDelete.photo)) # Removes file from path
     except:
-        pass #No se atiende si hay error respecto al archivo, si de todas formas de eliminará el empleado
+        pass
+    
+    db.session.delete(toDelete) #Updates DB
 
-    cursor.execute("DELETE FROM `sistema`.`empleados` WHERE id=%s", (id))
-    conn.commit()  # Cerramos la
+    db.session.commit()
 
-    return redirect('/')  # Regresamos de donde vinimos
-
-
-@app.route('/edit/<int:id>')
-def edit(id):
-    conn = mysql.connect()  # Se conecta a la conexión mysql.init_app(app)
-    cursor = conn.cursor()  # Almacenaremos lo que ejecutamos
-    # Ejecutamos la sentendia SQL sobre el registro de dicha ID
-    cursor.execute("SELECT * FROM `sistema`.`empleados` WHERE id=%s", (id))
-    empleados = cursor.fetchall()
-
-    conn.commit()  # Cerramos la conexión
-
-    return render_template('empleados/edit.html', empleados=empleados)
+    return redirect('/') 
 
 
-@app.route('/update/<int:id>', methods=['POST'])
-def update(id):
-    _nombre = request.form['txtNombre']
-    _apellido = request.form['txtApellido']
-    _correo = request.form['txtCorreo']
-    _foto = request.files['txtFoto']
+@app.route('/edit/<int:editID>')
+def edit(editID):
+    #Gets the employee that matches the ID
+    toEdit = Employee.query.filter_by(id = editID).first_or_404()
+
+    db.session.commit()
+    return render_template('empleados/edit.html', employee=toEdit)
 
 
-    sql = "UPDATE `sistema`.`empleados` SET `nombre`=%s, `apellido`=%s, `correo`=%s WHERE id=%s;"
-    datos = (_nombre, _apellido, _correo, id)
+@app.route('/update/<int:updateID>', methods=['POST'])
+def update(updateID):
+    #Request data from form
+    _name = request.form['txtNombre']
+    _surname = request.form['txtApellido']
+    _mail = request.form['txtCorreo']
+    _photo = request.files['txtFoto']
 
-    conn = mysql.connect()  # Se conecta a la conexión mysql.init_app(app)
-    cursor = conn.cursor()  # Almacenaremos lo que ejecutamos
+    #Gets the employee that matches the ID
+    toUpdate = Employee.query.filter_by(id = updateID).first_or_404()
 
-    cursor.execute(sql, datos)  # Ejecutamos la sentencia SQL
+    #Updates DB
+    toUpdate.name = _name
+    toUpdate.surname = _surname
+    toUpdate.mail = _mail
 
-    #Si la foto se ha cambiado..
-    if _foto.filename != '':
-        
-        try:
-            os.mkdir(app.config['CARPETA'])
-        except FileExistsError:
-            pass #Falla silenciosamente cuando ya hay una carpeta llamada 'uploads' 
+    #Changes the photo only if it has been modified
+    if _photo:
+        if allowed_file(_photo.filename):
+            try:
+                os.mkdir(app.config['UPLOAD_FOLDER'])
+            except FileExistsError:
+                pass #Fails silently when there's already a folder named 'uploads' 
 
-        now = datetime.now()
-        tiempo = now.strftime("%Y%H%M%S")  # Años horas minutos y segundos
+            try:
+                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], toUpdate.photo)) #Removes file from path
+            except:
+                pass 
+            
+            #Gets the time for the new filename
+            now = datetime.now()
+            date = now.strftime("%Y%H%M%S")
 
-        nuevoNombreFoto = tiempo+_foto.filename  # Concatena el nombre
-        _foto.save("data/uploads/"+nuevoNombreFoto)  # Lo guarda en la carpeta
+            filename = secure_filename(date+_photo.filename)
+            _photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename)) #Saves the new file into path
+            
+            toUpdate.photo = filename # Updates DB
+        else:
+            flash('Formato de imagen no válido') #Alert when use tries to upload a not allowed file 
+            return  redirect('/edit/'+str(updateID))
 
-        # Buscamos la foto
-        cursor.execute("SELECT foto FROM `sistema`.`empleados` WHERE id=%s", id)
-        fila = cursor.fetchall()  # Traemos toda la información
-        
-        try:
-            os.remove(os.path.join(app.config['CARPETA'], fila[0][0])) #Ese valor seleccionado se encuentra en la posición 0 y la fila
-        except:
-            pass #No se atiende si hay error respecto al archivo, si de todas formas de eliminará el empleado
-        
-        cursor.execute("UPDATE `sistema`.`empleados` SET foto=%s WHERE id=%s",(nuevoNombreFoto, id))  # Buscamos la foto
-
-    conn.commit()  # Cerramos la conexión
+    db.session.commit()
 
     return redirect('/')
 
-@app.route('/delete-pp/<int:id>')
-def deletePP(id):
-    conn = mysql.connect()  # Se conecta a la conexión mysql.init_app(app)
-    cursor = conn.cursor()  # Almacenaremos lo que ejecutamos
-
-    # Buscamos la foto
-    cursor.execute("SELECT foto FROM `sistema`.`empleados` WHERE id=%s", id)
-    fila = cursor.fetchall()  # Traemos toda la información
+@app.route('/delete-pp/<int:deleteID>')
+def deletePP(deleteID):
+    #Gets the employee that matches the ID
+    cursor = Employee.query.filter_by(id = deleteID).first_or_404()
         
     try:
-        os.remove(os.path.join(app.config['CARPETA'], fila[0][0])) #Ese valor seleccionado se encuentra en la posición 0 y la fila
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], cursor.photo)) #Removes file from path
     except FileNotFoundError:
-        pass #No se atiende si hay error respecto al archivo, si de todas formas de eliminará el empleado
+        pass 
     
-    cursor.execute("UPDATE `sistema`.`empleados` SET foto=%s WHERE id=%s",(None, id))  # Buscamos la foto
-    
-    conn.commit()  # Cerramos la conexión
+    cursor.photo = None #Updates DB
+    db.session.commit()
+
     return redirect('/')
 
 @app.route('/create')
@@ -148,43 +132,43 @@ def create():
 
 @app.route('/store', methods=['POST'])
 def storage():
-    _nombre = request.form['txtNombre']
-    _apellido = request.form['txtApellido']
-    _correo = request.form['txtCorreo']
-    _foto = request.files['txtFoto']
+    #Request data from form
+    _name = request.form['txtNombre']
+    _surname = request.form['txtApellido']
+    _mail = request.form['txtCorreo']
+    _photo = request.files['txtFoto']
 
-    #Valido
-    if _nombre == '' or _apellido == '' or _correo == '':
-        flash('Recuerda llenar los datos de los campos') #Envía el mensaje
-        return redirect(url_for('create')) #Vuelve a la página de carga de datos
+    #Checks data
+    if _name == '' or _surname == '' or _mail == '':
+        flash('Recuerda llenar los datos de los campos') #Sends msg
+        return redirect(url_for('create'))
 
-    now = datetime.now()  # Para añadir al nombre del archivo subido
-    tiempo = now.strftime("%Y%H%M%S")  # Años horas minutos y segundos
+    #Gets the time for the new filename
+    now = datetime.now()  
+    date = now.strftime("%Y%H%M%S")
     
     try:
-        os.mkdir(app.config['CARPETA'])
+        os.mkdir(app.config['UPLOAD_FOLDER'])
     except FileExistsError:
-        pass #Falla silenciosamente cuando ya hay una carpeta llamada 'uploads' 
+        pass # Fails silently when there's already a folder named 'uploads' 
 
-    nuevoNombreFoto = None
-    if _foto.filename != '':
-        nuevoNombreFoto = tiempo + _foto.filename  # Concatena el nombre
-        # Lo guarda en la carpeta 'uploads'
-        _foto.save('data/uploads/'+nuevoNombreFoto)
+    # Alert when use tries to upload a not allowed file 
+    if not (allowed_file(_photo.filename)):
+        flash('Formato de imagen no válido')
+        return redirect(url_for('create')) 
 
+    if _photo and allowed_file(_photo.filename):
+        filename = secure_filename(date+_photo.filename)
+        _photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename)) # Saves new file into path
 
+    entry = Employee(_name, _surname, _mail, filename) # Generates a new Employee
+    db.session.add(entry) # Adds the new Employee into the DB
 
-    sql = "INSERT INTO `sistema`.`empleados` (`id`, `nombre`, `apellido`, `correo`, `foto`) VALUES (NULL, %s, %s, %s, %s);"
-    datos = (_nombre, _apellido, _correo, nuevoNombreFoto)
+    db.session.commit()
 
-    conn = mysql.connect()  # Se conecta a la conexión mysql.init_app(app)
-    cursor = conn.cursor()  # Almacenaremos lo que ejecutamos
-    cursor.execute(sql, datos)  # Ejecutamos la sentencia SQL
-    conn.commit()  # Cerramos la conexión
+    return redirect('/')
 
-    # Identifica la carpeta y el archivo html
-    return redirect('/') #Regresamos de donde vinimos
-
-if __name__ == '__main__':  # Estas lìneas de código las requiere python para que se pueda empezar a trabajar con la aplicación
-    # Corremos la aplicación en modo debug (con el código activamos el debugger)
+if __name__ == '__main__': 
+    db.init_app(app)
+    db.create_all() 
     app.run(debug=True)
