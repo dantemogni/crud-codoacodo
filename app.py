@@ -152,16 +152,17 @@ def storage():
     except FileExistsError:
         pass # Fails silently when there's already a folder named 'uploads' 
 
-    # Alert when use tries to upload a not allowed file 
-    if not (allowed_file(_photo.filename)):
-        flash('Formato de imagen no válido')
-        return redirect(url_for('create')) 
+    filename = None # If not mofified, Employee gets None (null) image
 
-    if _photo and allowed_file(_photo.filename):
-        filename = secure_filename(date+_photo.filename)
-        _photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename)) # Saves new file into path
-
-    entry = Employee(_name, _surname, _mail, filename) # Generates a new Employee
+    if _photo:
+        if allowed_file(_photo.filename):
+            filename = secure_filename(date+_photo.filename)
+            _photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename)) # Saves new file into path
+        else:
+            flash('Formato de imagen no válido') # Alert when use tries to upload a not allowed file 
+            return redirect(url_for('create')) 
+        
+    entry = Employee(_name, _surname, _mail, filename) # Generates a new Employee. 
     db.session.add(entry) # Adds the new Employee into the DB
 
     db.session.commit()
