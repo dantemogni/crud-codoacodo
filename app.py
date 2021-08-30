@@ -20,13 +20,17 @@ app.config['MYSQL_DATABASE_BD'] = 'sistema'  # Nombre de nuestra BD
 
 mysql.init_app(app)  # Creamos la conexión con los datos
 
-CARPETA = os.path.join('uploads')  # Referencia a la carpeta
+CARPETA = os.path.join('data/uploads')  # Referencia a la carpeta
 # Indicamos que vamos a guardar esta ruta de la carpeta
 app.config['CARPETA'] = CARPETA
 
-@app.route('/uploads/<nombreFoto>')
+@app.route('/data/uploads/<nombreFoto>')
 def uploads(nombreFoto):
     return send_from_directory(app.config['CARPETA'], nombreFoto)
+
+@app.route('/data/no-photo.svg')
+def noPhoto():
+    return send_from_directory( os.path.join('data'), 'no-photo.svg')
 
 @app.route('/')  # Hacemos el ruteo para que el usuario entre en la raiz
 def index():
@@ -36,9 +40,9 @@ def index():
     cursor.execute(sql)  # Ejecutamos la sentencia SQL
     empleados = cursor.fetchall()  # Traemos toda la información
     conn.commit()  # Cerramos la conexión
-
+    cantEmpleados = len(empleados)
     # Identifica la carpeta y el archivo htm
-    return render_template('empleados/index.html', empleados=empleados)
+    return render_template('empleados/index.html', empleados=empleados, cantEmpleados=cantEmpleados)
 
 
 @app.route('/destroy/<int:id>')  # Recibe como parámetro el id del registro
@@ -51,7 +55,7 @@ def destroy(id):
 
     try:
         os.remove(os.path.join(app.config['CARPETA'], fila[0][0])) #Ese valor seleccionado se encuentra en la posición 0 y la fila
-    except FileNotFoundError:
+    except:
         pass #No se atiende si hay error respecto al archivo, si de todas formas de eliminará el empleado
 
     cursor.execute("DELETE FROM `sistema`.`empleados` WHERE id=%s", (id))
@@ -67,6 +71,7 @@ def edit(id):
     # Ejecutamos la sentendia SQL sobre el registro de dicha ID
     cursor.execute("SELECT * FROM `sistema`.`empleados` WHERE id=%s", (id))
     empleados = cursor.fetchall()
+
     conn.commit()  # Cerramos la conexión
 
     return render_template('empleados/edit.html', empleados=empleados)
@@ -75,12 +80,13 @@ def edit(id):
 @app.route('/update/<int:id>', methods=['POST'])
 def update(id):
     _nombre = request.form['txtNombre']
+    _apellido = request.form['txtApellido']
     _correo = request.form['txtCorreo']
     _foto = request.files['txtFoto']
 
 
-    sql = "UPDATE `sistema`.`empleados` SET `nombre`=%s, `correo`=%s WHERE id=%s;"
-    datos = (_nombre, _correo, id)
+    sql = "UPDATE `sistema`.`empleados` SET `nombre`=%s, `apellido`=%s, `correo`=%s WHERE id=%s;"
+    datos = (_nombre, _apellido, _correo, id)
 
     conn = mysql.connect()  # Se conecta a la conexión mysql.init_app(app)
     cursor = conn.cursor()  # Almacenaremos lo que ejecutamos
@@ -99,7 +105,7 @@ def update(id):
         tiempo = now.strftime("%Y%H%M%S")  # Años horas minutos y segundos
 
         nuevoNombreFoto = tiempo+_foto.filename  # Concatena el nombre
-        _foto.save("uploads/"+nuevoNombreFoto)  # Lo guarda en la carpeta
+        _foto.save("data/uploads/"+nuevoNombreFoto)  # Lo guarda en la carpeta
 
         # Buscamos la foto
         cursor.execute("SELECT foto FROM `sistema`.`empleados` WHERE id=%s", id)
@@ -107,7 +113,7 @@ def update(id):
         
         try:
             os.remove(os.path.join(app.config['CARPETA'], fila[0][0])) #Ese valor seleccionado se encuentra en la posición 0 y la fila
-        except FileNotFoundError:
+        except:
             pass #No se atiende si hay error respecto al archivo, si de todas formas de eliminará el empleado
         
         cursor.execute("UPDATE `sistema`.`empleados` SET foto=%s WHERE id=%s",(nuevoNombreFoto, id))  # Buscamos la foto
@@ -116,6 +122,24 @@ def update(id):
 
     return redirect('/')
 
+@app.route('/delete-pp/<int:id>')
+def deletePP(id):
+    conn = mysql.connect()  # Se conecta a la conexión mysql.init_app(app)
+    cursor = conn.cursor()  # Almacenaremos lo que ejecutamos
+
+    # Buscamos la foto
+    cursor.execute("SELECT foto FROM `sistema`.`empleados` WHERE id=%s", id)
+    fila = cursor.fetchall()  # Traemos toda la información
+        
+    try:
+        os.remove(os.path.join(app.config['CARPETA'], fila[0][0])) #Ese valor seleccionado se encuentra en la posición 0 y la fila
+    except FileNotFoundError:
+        pass #No se atiende si hay error respecto al archivo, si de todas formas de eliminará el empleado
+    
+    cursor.execute("UPDATE `sistema`.`empleados` SET foto=%s WHERE id=%s",(None, id))  # Buscamos la foto
+    
+    conn.commit()  # Cerramos la conexión
+    return redirect('/')
 
 @app.route('/create')
 def create():
@@ -125,11 +149,12 @@ def create():
 @app.route('/store', methods=['POST'])
 def storage():
     _nombre = request.form['txtNombre']
+    _apellido = request.form['txtApellido']
     _correo = request.form['txtCorreo']
     _foto = request.files['txtFoto']
 
     #Valido
-    if _nombre == '' or _correo == '' or _foto =='':
+    if _nombre == '' or _apellido == '' or _correo == '':
         flash('Recuerda llenar los datos de los campos') #Envía el mensaje
         return redirect(url_for('create')) #Vuelve a la página de carga de datos
 
@@ -141,14 +166,16 @@ def storage():
     except FileExistsError:
         pass #Falla silenciosamente cuando ya hay una carpeta llamada 'uploads' 
 
+    nuevoNombreFoto = None
     if _foto.filename != '':
-            nuevoNombreFoto = tiempo + _foto.filename  # Concatena el nombre
-            # Lo guarda en la carpeta 'uploads'
-            _foto.save('uploads/'+nuevoNombreFoto)
+        nuevoNombreFoto = tiempo + _foto.filename  # Concatena el nombre
+        # Lo guarda en la carpeta 'uploads'
+        _foto.save('data/uploads/'+nuevoNombreFoto)
 
 
-    sql = "INSERT INTO `sistema`.`empleados` (`id`, `nombre`, `correo`, `foto`) VALUES (NULL, %s, %s, %s);"
-    datos = (_nombre, _correo, nuevoNombreFoto)
+
+    sql = "INSERT INTO `sistema`.`empleados` (`id`, `nombre`, `apellido`, `correo`, `foto`) VALUES (NULL, %s, %s, %s, %s);"
+    datos = (_nombre, _apellido, _correo, nuevoNombreFoto)
 
     conn = mysql.connect()  # Se conecta a la conexión mysql.init_app(app)
     cursor = conn.cursor()  # Almacenaremos lo que ejecutamos
