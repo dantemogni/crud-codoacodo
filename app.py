@@ -36,7 +36,7 @@ def index():
     employees = Employee.query.order_by(Employee.id).all() # Gets all the values from Employee table, sorted by ID
     employeesCount = Employee.query.count() # Counts the values
 
-    return render_template('empleados/index.html', employees=employees, employeesCount=employeesCount)
+    return render_template('/employee/index.html', employees=employees, employeesCount=employeesCount)
 
 
 @app.route('/destroy/<int:deleteID>')
@@ -62,16 +62,16 @@ def edit(editID):
     toEdit = Employee.query.filter_by(id = editID).first_or_404()
 
     db.session.commit()
-    return render_template('empleados/edit.html', employee=toEdit)
+    return render_template('employee/edit.html', employee=toEdit)
 
 
 @app.route('/update/<int:updateID>', methods=['POST'])
 def update(updateID):
     #Request data from form
-    _name = request.form['txtNombre']
-    _surname = request.form['txtApellido']
-    _mail = request.form['txtCorreo']
-    _photo = request.files['txtFoto']
+    _name = request.form['nameInput']
+    _surname = request.form['surnameInput']
+    _mail = request.form['mailInput']
+    _photo = request.files['photoInput']
 
     #Gets the employee that matches the ID
     toUpdate = Employee.query.filter_by(id = updateID).first_or_404()
@@ -127,16 +127,16 @@ def deletePP(deleteID):
 
 @app.route('/create')
 def create():
-    return render_template('empleados/create.html')
+    return render_template('employee/create.html')
 
 
 @app.route('/store', methods=['POST'])
 def storage():
     #Request data from form
-    _name = request.form['txtNombre']
-    _surname = request.form['txtApellido']
-    _mail = request.form['txtCorreo']
-    _photo = request.files['txtFoto']
+    _name = request.form['nameInput']
+    _surname = request.form['surnameInput']
+    _mail = request.form['mailInput']
+    _photo = request.files['photoInput']
 
     #Checks data
     if _name == '' or _surname == '' or _mail == '':
