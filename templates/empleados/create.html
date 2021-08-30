@@ -1,10 +1,13 @@
 {% include 'header.html' %}
     {% with messages= get_flashed_messages() %}
         {% if messages %}
-            <div class="alert alert-danger" role="alert">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 {% for message in messages %}
                     {{message}}
                 {% endfor %}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
             </div>
         {% endif %}
     {% endwith %}
@@ -16,21 +19,35 @@
             <h5 class="card-title">Ingresar empleados</h5>
             <p class="card-text">
                 <form method="post" action="/store" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="txtNombre">Nombre</label>
-                        <input id="txtNombre" class="form-control" type="text" name="txtNombre">
+                    <div class="form-group row">
+                        <label for="txtNombre" class="col-sm-2 col-form-label col-form-label-sm">Nombre</label>
+                        <div class="col-sm-10">
+                            <input id="txtNombre" class="form-control form-control-sm" type="text" name="txtNombre">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="txtApellido" class="col-sm-2 col-form-label col-form-label-sm">Apellido</label>
+                        <div class="col-sm-10">
+                            <input id="txtApellido" class="form-control form-control-sm" type="text" name="txtApellido">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="txtCorreo" class="col-sm-2 col-form-label col-form-label-sm">Correo</label>
+                        <div class="col-sm-10">
+                            <input id="txtCorreo" class="form-control form-control-sm" type="text" name="txtCorreo">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="txtFoto" class="col-sm-2 col-form-label col-form-label-sm">Foto de perfil</label>
+                        <div class="col-sm-10">
+                            <input id="txtFoto" class="form-control form-control-sm" type="file" name="txtFoto">
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label for="txtCorreo">Correo:</label>
-                        <input id="txtCorreot" class="form-control" type="text" name="txtCorreo">
-                    </div>
-                    <div class="form-group">
-                        <label for="txtFoto">Foto:</label>
-                        <input id="txtFoto" class="form-control" type="file" name="txtFoto">
-                    </div>
-                    <div class="form-group">
-                        <input type="submit" class="btn btn-success" value="Agregar">
-                        <a href="{{url_for('index')}}" class="btn btn-primary">Regresar</a>
+                        <div class="col-sm-10">
+                            <input type="submit" class="btn btn-success btn-sm" value="Agregar">
+                            <a href="{{url_for('index')}}" class="btn btn-primary btn-sm">Regresar</a>
+                        </div>  
                     </div>
                 </form>
             </p>
