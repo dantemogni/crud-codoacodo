@@ -1,52 +1,55 @@
 {% include 'header.html' %}
-  <br>
-  <a href="{{url_for('create')}}" class="btn btn-success">Ingresar nuevo empleado</a>
-  <br>
-  <br>
-  <!doctype html>
-  <html lang="en">
-    <head>
-      <title>Hola Flask!</title>
-      <!-- Required meta tags -->
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-      
-      <!-- Bootstrap CSS -->
-      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    </head>
-    <body>
-      <table class="table table-light">
-        <thead class="thead-light">
-          <tr>
-            <th>#</th>
-            <th>Foto</th>
-            <th>Nombre</th>
-            <th>Correos</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for empleado in empleados %}
-          <tr>
-            <td>{{empleado[0]}}</td>
-            <td>
-              <img class="thumbnail" width="100" src="uploads/{{empleado[3]}}" alt="">  <!--Foto-->
-            </td>          
-            <td>{{empleado[1]}}</td>
-            <td>{{empleado[2]}}</td> 
-            <td>
-              <a class="btn btn-warning" href="/edit/{{empleado[0]}}">Editar</a> |
-              <a class="btn btn-danger" onclick="return confirm('¿Desea borrar al empleado?')" href="/destroy/{{empleado[0]}}">Eliminar</a>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-        
-      <!-- Optional JavaScript -->
-      <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-      <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-      <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-    </body>
-  </html>
+<br>
+<a href="{{url_for('create')}}" class="btn btn-success">Ingresar nuevo empleado</a>
+<br>
+<br>
+{% if cantEmpleados == 0 %}
+  <!-- Si no hay empleados muestro un mensaje de bienvenida-->
+  <div class="alert alert-info" role="alert">
+    <h4 class="alert-heading">¡Bienvenido!</h4>
+    <p>Todavía no hay empleados en el sistema.</p>
+    <hr>
+    <p class="mb-0">Para agregar un empleado, presiona el botón <i>'Ingresar nuevo empleado'</i> más arriba.</p>
+  </div>
+ {% else %}
+ <!-- Si hay empleados muestro la tabla -->
+  <table class="table table-hover">
+    <thead class="thead thead-light">
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Foto</th>
+        <th scope="col">Nombre</th>
+        <th scope="col">Apellido</th>
+        <th scope="col">Correo</th>
+        <th scope="col">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for empleado in empleados %}
+      <tr>
+        <th scope="row">{{empleado[0]}}</th>
+        <td>
+          {% if empleado[4] %}
+          <img class="img-thumbnail rounded " width="70" src="data/uploads/{{empleado[4]}}"
+            alt="Foto de {{empleado[1]}}" title="{{empleado[1]}}">
+          <!--Foto-->
+          {% else %}
+          <img class="img-thumbnail rounded" width="70" src="/data/no-photo.svg" alt="Sin foto de perfil"
+            title="Sin foto de perfil">
+          <!--Foto-->
+          {% endif %}
+        </td>
+        <td>{{empleado[1]}}</td>
+        <td>{{empleado[2]}}</td>
+        <td>{{empleado[3]}}</td>
+        <td>
+          <a class="btn btn-warning btn-sm" href="/edit/{{empleado[0]}}">Editar</a> |
+          <a class="btn btn-danger btn-sm" onclick="return confirm('¿Desea borrar al empleado?')"
+            href="/destroy/{{empleado[0]}}">Eliminar</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
 {% include 'footer.html' %}
