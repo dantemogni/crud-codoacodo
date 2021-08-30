@@ -33,7 +33,7 @@ def noPhoto():
 
 @app.route('/')
 def index():
-    employees = Employee.query # Gets all the values from Employee table
+    employees = Employee.query.order_by(Employee.id).all() # Gets all the values from Employee table, sorted by ID
     employeesCount = Employee.query.count() # Counts the values
 
     return render_template('empleados/index.html', employees=employees, employeesCount=employeesCount)
