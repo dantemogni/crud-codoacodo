@@ -1,4 +1,6 @@
-{% include 'header.html' %}
+{% extends 'layout.html' %}
+{% block title %} Inicio {% endblock %}
+{% block content %}
 <br>
 <a href="{{url_for('create')}}" class="btn btn-success">Ingresar nuevo empleado</a>
 <br>
@@ -52,4 +54,4 @@
     </tbody>
   </table>
   {% endif %}
-{% include 'footer.html' %}
+  {% endblock %}
