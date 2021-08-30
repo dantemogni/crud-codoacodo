@@ -3,8 +3,8 @@
 <a href="{{url_for('create')}}" class="btn btn-success">Ingresar nuevo empleado</a>
 <br>
 <br>
-{% if cantEmpleados == 0 %}
-  <!-- Si no hay empleados muestro un mensaje de bienvenida-->
+{% if employeesCount == 0 %}
+  <!-- Show welcome card if there aren't any employees -->
   <div class="alert alert-info" role="alert">
     <h4 class="alert-heading">¡Bienvenido!</h4>
     <p>Todavía no hay empleados en el sistema.</p>
@@ -12,7 +12,7 @@
     <p class="mb-0">Para agregar un empleado, presiona el botón <i>'Ingresar nuevo empleado'</i> más arriba.</p>
   </div>
  {% else %}
- <!-- Si hay empleados muestro la tabla -->
+ <!-- Shows data if there are any employees -->
   <table class="table table-hover">
     <thead class="thead thead-light">
       <tr>
@@ -25,27 +25,27 @@
       </tr>
     </thead>
     <tbody>
-      {% for empleado in empleados %}
+      {% for employee in employees %}
       <tr>
-        <th scope="row">{{empleado[0]}}</th>
+        <th scope="row">{{employee.id}}</th>
         <td>
-          {% if empleado[4] %}
-          <img class="img-thumbnail rounded " width="70" src="data/uploads/{{empleado[4]}}"
-            alt="Foto de {{empleado[1]}}" title="{{empleado[1]}}">
-          <!--Foto-->
+          {% if employee.photo %}
+          <!-- Shows profile picture if there's any -->
+          <img class="img-thumbnail rounded " width="70" src="data/uploads/{{employee.photo}}"
+            alt="Foto de {{ employee.name + ' ' + employee.surname }}" title="{{employee.name + ' ' + employee.surname}}">
           {% else %}
+          <!-- Else, shows 'no-photo' image -->
           <img class="img-thumbnail rounded" width="70" src="/data/no-photo.svg" alt="Sin foto de perfil"
             title="Sin foto de perfil">
-          <!--Foto-->
           {% endif %}
         </td>
-        <td>{{empleado[1]}}</td>
-        <td>{{empleado[2]}}</td>
-        <td>{{empleado[3]}}</td>
+        <td>{{employee.name}}</td>
+        <td>{{employee.surname}}</td>
+        <td>{{employee.mail}}</td>
         <td>
-          <a class="btn btn-warning btn-sm" href="/edit/{{empleado[0]}}">Editar</a> |
+          <a class="btn btn-warning btn-sm" href="/edit/{{employee.id}}">Editar</a> |
           <a class="btn btn-danger btn-sm" onclick="return confirm('¿Desea borrar al empleado?')"
-            href="/destroy/{{empleado[0]}}">Eliminar</a>
+            href="/destroy/{{employee.id}}">Eliminar</a>
         </td>
       </tr>
       {% endfor %}
