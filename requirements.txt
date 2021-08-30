@@ -1,3 +1,5 @@
 flask
 Flask-MySQL
 jinja2
+flask_sqlalchemy
+psycopg2
