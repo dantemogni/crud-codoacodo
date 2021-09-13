@@ -9,9 +9,9 @@ from werkzeug.utils import secure_filename
 from models import db, Employee
 
 app = Flask(__name__) 
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:root@localhost/system'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://dante@localhost/system-crud'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 app.secret_key = os.urandom(16)
 
 # Configs for uploading photos
