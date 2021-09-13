@@ -11,10 +11,12 @@ from models import db, Employee
 
 app = Flask(__name__) 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://erfuhkjhwvckgq:392614962ad7fac86bc517626e7b62e292c33f0e0fa9b78dacb95ad6ae05cdb0@ec2-52-45-238-24.compute-1.amazonaws.com:5432/d4faod5t719i4e'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://erfuhkjhwvckgq:392614962ad7fac86bc517626e7b62e292c33f0e0fa9b78dacb95ad6ae05cdb0@ec2-52-45-238-24.compute-1.amazonaws.com:5432/d4faod5t719i4e'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 app.secret_key = os.urandom(16)
+
+db.init_app(app)
 
 # Configs for uploading photos
 UPLOAD_FOLDER = os.path.join('data/uploads') 
@@ -172,6 +174,5 @@ def storage():
     return redirect('/')
 
 if __name__ == '__main__': 
-    db.init_app(app)
     db.create_all() 
     app.run(debug=True)
