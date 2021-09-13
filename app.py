@@ -174,4 +174,4 @@ def storage():
 if __name__ == '__main__': 
     db.init_app(app)
     db.create_all() 
-    app.run(port=3000)
+    app.run(port=3000, debug=True)
