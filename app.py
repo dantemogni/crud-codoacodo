@@ -14,7 +14,7 @@ DATABASE_URL = os.environ['DATABASE_URL']
 
 app = Flask(__name__) 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = psycopg2.connect(DATABASE_URL, sslmode='require')
+app.config['SQLALCHEMY_DATABASE_URI'] = psycopg2.connect(DATABASE_URL)
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://erfuhkjhwvckgq:392614962ad7fac86bc517626e7b62e292c33f0e0fa9b78dacb95ad6ae05cdb0@ec2-52-45-238-24.compute-1.amazonaws.com:5432/d4faod5t719i4e'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
