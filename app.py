@@ -11,7 +11,7 @@ from models import db, Employee
 
 app = Flask(__name__) 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://dante@localhost/system-crud'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://erfuhkjhwvckgq@localhost/d4faod5t719i4e'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 app.secret_key = os.urandom(16)
