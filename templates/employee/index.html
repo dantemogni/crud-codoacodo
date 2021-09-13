@@ -41,17 +41,28 @@
             title="Sin foto de perfil">
           {% endif %}
         </td>
-        <td>{{employee.name}}</td>
-        <td>{{employee.surname}}</td>
+        <td id="name-employee">{{employee.name}}</td>
+        <td id="surname-employee">{{employee.surname}}</td>
         <td>{{employee.mail}}</td>
         <td>
           <a class="btn btn-warning btn-sm" href="/edit/{{employee.id}}">Editar</a> |
-          <a class="btn btn-danger btn-sm" onclick="return confirm('¿Desea borrar al empleado?')"
-            href="/destroy/{{employee.id}}">Eliminar</a>
+          <button 
+            type="button" 
+            id="delete" 
+            class="btn btn-danger btn-sm" 
+            data-toggle="modal" 
+            data-id="{{employee.id}}"
+            data-name="{{employee.name}}"
+            data-surname="{{employee.surname}}"
+            data-target="#modalDelete"
+            >
+            Eliminar
+          </button>
         </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
+  {% include 'employee/modal-delete.html' %} 
   {% endif %}
   {% endblock %}
