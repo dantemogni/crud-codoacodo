@@ -8,7 +8,10 @@ import os  # Nos pemite acceder a los archivos
 from werkzeug.utils import secure_filename
 from models import db, Employee
 
+
 app = Flask(__name__) 
+db.init_app(app)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://dante@localhost/system-crud'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -170,7 +173,6 @@ def storage():
     return redirect('/')
 
 if __name__ == '__main__': 
-    port = int(os.environ.get('PORT', 33507))
     db.init_app(app)
     db.create_all() 
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True)
