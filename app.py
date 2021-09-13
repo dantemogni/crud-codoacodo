@@ -10,7 +10,6 @@ from models import db, Employee
 
 
 app = Flask(__name__) 
-db.init_app(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://dante@localhost/system-crud'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -175,4 +174,4 @@ def storage():
 if __name__ == '__main__': 
     db.init_app(app)
     db.create_all() 
-    app.run(threaded=True, port=5000, debug=True)
+    app.run(port=3000)
